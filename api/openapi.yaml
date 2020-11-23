@@ -1,0 +1,1109 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: contact@payrobot.io
+  description: "# Introduction\nAccept, store, send or forward Bitcoin, Litecoin and\
+    \ Bitcoin Cash for your website or app and protect your privacy.\n\nSupported\
+    \ crytocurrencies:\n  * BTC Bitcoin\n  * LTC Litecoin\n  * BCH Bitcoin Cash\n\n\
+    \n## Benefits\n\n  * **Anonymous** No personal details are required and transactions\
+    \ are mixed among all payments. You can forward your payments so as soon payrobot.io\
+    \ receives it forwards it to another address under your control.\n  \n  * **No\
+    \ Registration** No registration, sign-up, application or form required to use\
+    \ payrobot.io\n  \n  * **Easy Integration** Integrate your web / app through our\
+    \ simple RESTful API, you can accept payments with just one line of code!\n  \n\
+    \  * **Instant Payment Notification** Our servers notify your web / app the status\
+    \ of your payments. No polling, daemons or cronjobs required on your side!\n \
+    \ \n  * **Secure** Payrobot.io works with SSL and bank-level security protocols.\
+    \ Your transactions are safe!\n\n\n## Features\n**Payment Forward**\nGenerate\
+    \ one-time addresses to recieve payments. Payrobot will notify your web /app through\
+    \ callbacks (webhooks) the status of the payment. As soon as it's confirmed the\
+    \ payment is forwarded to your desired address.\n\n**Wallet**\nReceive, send payments\
+    \ and store your coins in a secure, private and anonymous wallet. All events are\
+    \ notified to your web / app through callbacks (webhooks). You can generate wallets\
+    \ with just one line of code without registration or further information\n\n##\
+    \ Fees\n**Only 0.90% per inbound transaction** (receive payments), NO HIDDEN FEES.\
+    \ All outbound transactions (send funds) are totally free.\n\nMinimum fees applies,\
+    \ therefore the largest amount is going to be considered as fee either: `(inboundAmount*feePct)`\
+    \ or `the minimum fee`\n\n**Inbound Fees (Receive payments)**\n\n  - `Bitcoin`\
+    \ 0.90% *(Minimum fee 0.00005 BTC)*\n  - `Litecoin` 0.90% *(Minimum fee 0.0005\
+    \ LTC)*\n  - `Bitcoin Cash` 0.90% *(Minimum fee 0.0005 BCH)*\n  \n\n**Outbound\
+    \ Fees (Send funds)**\n\n  - `Bitcoin` 0.00%\n  - `Litecoin` 0.00%\n  - `Bitcoin\
+    \ Cash` 0.00%\n\n\n## Rate Limit\nTo guarantee the good performance of the service\
+    \ and its fair use. The API is **limited to receiving 120 requests per minute\
+    \ per IP**, which is sufficient for most use cases.\n\nPayrobot.io is asynchronous\
+    \ in most API methods to communicate with your application through callbacks (webhooks),\
+    \ thus reducing unnecessary calls to the service.\n\n**If the limit is exceeded,\
+    \ the IP will be banned for 1 minute.**\n\nIf you require an upper limit for your\
+    \ application, do not hesitate to contact us\n\n## Considerations\n\n  * Amounts\
+    \ in responses are expresed as `strings`\n  \n  * Wallets are not multi-currency,\
+    \ you have to create a different wallet per cryptocurrency (You can't store Litecoin\
+    \ in a Bitcoin wallet and vice-versa)\n  \n  * Payment forwarding has to be of\
+    \ the same type of currency (You can't forward a Bitcoin Cash payment to a Bitcoin\
+    \ address and vice-versa)\n  \n"
+  title: Payrobot
+  version: "1.0"
+servers:
+- description: Production server (uses live data)
+  url: https://api.payrobot.io
+tags:
+- description: Generate one-time addresses to recieve payments. Payrobot will notify
+    your web /app through callbacks (webhooks) the status of the payment. As soon
+    as it's confirmed the payment is forwarded to your desired address or stored in
+    a payrobot.io wallet
+  name: Payment
+- description: Receive, send payments and store your coins in a secure, private and
+    anonymous wallet. All events are notified to your web / app through callbacks
+    (webhooks). You can generate wallets with just one line of code without registration
+    or further information
+  name: Wallet
+paths:
+  /{currency}/payments:
+    post:
+      callbacks:
+        Payment Notification Callback:
+          https://callback-url.com:
+            post:
+              description: |
+                A **payment notificacion** will be sent to your callback url in the following scenarios:
+
+                  1. *Payment is received partially*
+                  2. *Payment is being confirmed by network*
+                  3. *Payment is confirmed at least with 1 confirmation*
+              operationId: payment_Notification_Callback_httpsCallbackUrlComPost
+              parameters:
+              - description: |
+                  Object Currency:
+                    * `BTC`: Bitcoin
+                    * `LTC`: Litecoin
+                    * `BCH`: Bitcoin Cash
+                explode: true
+                in: query
+                name: currency
+                required: true
+                schema:
+                  enum:
+                  - BTC
+                  - LTC
+                  - BCH
+                  type: string
+                style: form
+              - description: Address where payment is being received
+                explode: true
+                in: query
+                name: address
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: Custom reference to identify the payment
+                explode: true
+                in: query
+                name: reference
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: |
+                  Status of the payment:
+                   * `0: Idle` payment has not been paid
+                   * `1: Incomplete` payment is being paid partially
+                   * `2: Confirming` payment has been received completely but it's not confirmed by Bitcoin Network yet
+                   * `3: Confirmed` payment has been paid completely and it has at least `1` confirmation by Bitcoin Network
+                explode: true
+                in: query
+                name: status
+                required: true
+                schema:
+                  type: integer
+                style: form
+              - description: Partial amount received when payment is incomplete
+                explode: true
+                in: query
+                name: partialAmount
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: Remaining amount to pay when payment is incomplete
+                explode: true
+                in: query
+                name: remainingAmount
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: The payment amount your client has to send to the created
+                  address
+                explode: true
+                in: query
+                name: amount
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: Fee percentage that will be discounted
+                explode: true
+                in: query
+                name: feePct
+                required: true
+                schema:
+                  type: number
+                style: form
+              - description: Fee amount that will be discounted
+                explode: true
+                in: query
+                name: feeAmount
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: "Final amount of the transaction (Fee discount is already\
+                  \ applied)\n  * For `receive and forward payment` is the total amount\
+                  \ to forward as soon as the payment is confirmed\n  \n  * For `receive\
+                  \ and forward payment` is the total amount to store in the wallet\
+                  \ as soon as the payment is confirmed"
+                explode: true
+                in: query
+                name: finalAmount
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: |
+                  * For `receive and forward payment` is the address where the payment is going to be forwarded as soon as it's confirmed
+                  * For `receive and store payment` is the Wallet ID where the payment is going to be stored as soon as it's confirmed
+                explode: true
+                in: query
+                name: destination
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: |
+                  * `0: Receive and forward` payment is forwarded to a desired Bitcoin address once it's confirmed
+                  * `1: Receive and store` payment is stored in a payrobot.io Bitcoin Wallet
+                explode: true
+                in: query
+                name: type
+                required: true
+                schema:
+                  enum:
+                  - 0
+                  - 1
+                  type: number
+                style: form
+              responses:
+                "200":
+                  description: Your server returns this code if it accepts the callback.<br/><strong>Payrobot.io
+                    will try up to 3 times to send the notification to your server.</strong>
+              x-callback-request: true
+      description: "Generates a new one-use address to receive a payment. It callbacks\
+        \ your web/app server as soon as it's paid and confirmed.\n\n**Payment can\
+        \ be `forwarded` to another address or it can be `stored` in a payrobot.io\
+        \ wallet**\n\n  \n---\n## Important\n\n  * Unpaid requests are deleted after\
+        \ **3 hours** of theirs creation\n  * Confirmed payments information is deleted\
+        \ after **3 days** of being confirmed\n  \n---\n## Minimum Amounts\n\n\n \
+        \ * `Bitcoin`: 0.0001 BTC\n  * `Litecoin`: 0.001 LTC\n  * `Bitcoin Cash`:\
+        \ 0.001 BCH\n  \n---\n## Callbacks\nA **payment notificacion** will be sent\
+        \ to your callback url in the following scenarios:\n\n  1. *Payment is received\
+        \ partially*\n  2. *Payment is being confirmed by network*\n  3. *Payment\
+        \ is confirmed at least with 1 confirmation*\n\n\nThe callback sent to your\
+        \ callback url is a **POST** request with the following parameters:\n\n*Example:*\n\
+        \n    currency:         \"BTC\"\n    paymentId:        \"698fd3f6-5482-4798-8a46-6732af440616\"\
+        \n    address:          \"3KoUDMfrov91G4SXaCKGvTWDjGia9Jod5b\"\n    type:\
+        \             0\n    partialAmount:    \"0.00\"\n                      //Partial\
+        \ amount received when payment is incomplete\n    remainingAmount:  \"0.00\"\
+        \n                      //Remaining amount to pay when payment is incomplete\n\
+        \    amount:           \"0.1\"\n    feePct:           0.90\n    feeAmount:\
+        \        \"0.0009\"\n    finalAmount:      \"0.0991\"\n    destination:  \
+        \    \"698fd3f6-5482-4798-8a46-6732af440616\"\n    reference:        \"12345\"\
+        \n    status:           2\n"
+      operationId: createPayment
+      parameters:
+      - description: |
+          Object Currency:
+            * `btc`: Bitcoin
+            * `ltc`: Litecoin
+            * `bch`: Bitcoin Cash
+        explode: false
+        in: path
+        name: currency
+        required: true
+        schema:
+          enum:
+          - btc
+          - ltc
+          - bch
+          example: btc
+          type: string
+        style: simple
+      - description: |
+          * `0: Receive and forward` payment is forwarded to a desired coin address once it's confirmed
+
+          * `1: Receive and store` payment is stored in a payrobot.io wallet
+        explode: true
+        in: query
+        name: type
+        required: true
+        schema:
+          enum:
+          - 0
+          - 1
+          example: 0
+          type: integer
+        style: form
+      - description: |
+          * For `Receive and forward` payment is the `ADDRESS` where the payment is going to be forwarded as soon as it's confirmed. **ADDRESS HAS TO BE OF THE SAME TYPE OF CURRENCY**
+
+          * For `Receive and store` payment is the payrobot.io `WALLET ID` where the payment is going to be stored as soon as it's confirmed. **WALLET HAS TO BE OF THE SAME TYPE OF CURRENCY**
+        explode: true
+        in: query
+        name: destination
+        required: true
+        schema:
+          example: bc1qzlza4ke65fa2sqacjfu5vtwy8ar6x8xttgk999
+          type: string
+        style: form
+      - description: Amount of the payment
+        explode: true
+        in: query
+        name: amount
+        required: true
+        schema:
+          example: 0.0129
+          type: number
+        style: form
+      - description: Your URL where payrobot.io will send the status of the payment
+          (Webhook)
+        explode: true
+        in: query
+        name: callback
+        required: true
+        schema:
+          example: https://your-callback-url.com
+          type: string
+        style: form
+      - description: Optional custom reference to identify the payment
+        explode: true
+        in: query
+        name: reference
+        required: false
+        schema:
+          example: Bill123
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequest'
+          description: Successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Error
+      summary: Generate a new one-use address to receive a payment
+      tags:
+      - Payment
+  /{currency}/payments/{paymentId}:
+    get:
+      description: Gets detailed information about a payment
+      operationId: getPayment
+      parameters:
+      - description: |
+          Object Currency:
+            * `btc`: Bitcoin
+            * `ltc`: Litecoin
+            * `bch`: Bitcoin Cash
+        explode: false
+        in: path
+        name: currency
+        required: true
+        schema:
+          enum:
+          - btc
+          - ltc
+          - bch
+          example: btc
+          type: string
+        style: simple
+      - description: Payment ID to query
+        example: 698fd3f6-5482-4798-8a46-6732af440616
+        explode: false
+        in: path
+        name: paymentId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRequest'
+          description: Succesful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Error
+      summary: Get detailed information about a payment
+      tags:
+      - Payment
+  /{currency}/wallets:
+    post:
+      description: |
+        Creates a new wallet where you can receive, store and send funds for your web or app.
+
+        ---
+        ## Important
+        This method returns your `Wallet Passphrase`, it will be required when you send funds from your wallet. **Please keep it safe and private**
+      operationId: createWallet
+      parameters:
+      - description: |
+          Object Currency:
+            * `btc`: Bitcoin
+            * `ltc`: Litecoin
+            * `bch`: Bitcoin Cash
+        explode: false
+        in: path
+        name: currency
+        required: true
+        schema:
+          enum:
+          - btc
+          - ltc
+          - bch
+          example: btc
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletCreationInfo'
+          description: Successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Error
+      summary: Create new wallet
+      tags:
+      - Wallet
+  /{currency}/wallets/{walletId}:
+    get:
+      description: Gets detailed information from a Wallet
+      operationId: getWallet
+      parameters:
+      - description: |
+          Object Currency:
+            * `btc`: Bitcoin
+            * `ltc`: Litecoin
+            * `bch`: Bitcoin Cash
+        explode: false
+        in: path
+        name: currency
+        required: true
+        schema:
+          enum:
+          - btc
+          - ltc
+          - bch
+          example: btc
+          type: string
+        style: simple
+      - description: ID of the desired Wallet
+        example: 775937b9-b7fc-47cf-be7c-934d602bd6af
+        explode: false
+        in: path
+        name: walletId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+          description: Successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: error
+      summary: Get Wallet information
+      tags:
+      - Wallet
+  /{currency}/wallets/{walletId}/send-requests:
+    post:
+      callbacks:
+        Send Completed Callback:
+          https://your-app-url.com/example:
+            post:
+              description: |
+                This callback is executed as soon as the send request has been fully broadcasted to the Network.
+                <br/><br/>**It includes the Tx hash**
+              operationId: send_Completed_Callback_httpsYourAppUrlComExamplePost
+              parameters:
+              - description: Wallet currency BTC
+                example: BTC
+                explode: true
+                in: query
+                name: currency
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: Unique ID of the new created Wallet
+                example: 698fd3f6-5482-4798-8a46-6732af440616
+                explode: true
+                in: query
+                name: walletId
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: ID of this transaction, it can be used letter in the
+                  callback or to query it
+                example: 123fd3f6-9078-5790-4f40-6932bf440120
+                explode: true
+                in: query
+                name: requestId
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: Request creation date expressed in UNIX timestamp
+                example: 1577179288
+                explode: true
+                in: query
+                name: timestamp
+                required: true
+                schema:
+                  type: integer
+                style: form
+              - description: Last update expressed in UNIX timestamp
+                example: 1577179388
+                explode: true
+                in: query
+                name: lastupdate
+                required: true
+                schema:
+                  type: integer
+                style: form
+              - description: Total amount sent from wallet
+                example: "0.01000000"
+                explode: true
+                in: query
+                name: amount
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: Optional callback to notify your web / app as soon as
+                  the send request has been fully broadcasted to the Network
+                explode: true
+                in: query
+                name: callback
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: |
+                  JSON encoded array with all the destination addres(es) and the amount(s) to send. Array has the following structure:\
+                  `[{"address":"bc1q5defveu0acrf87m3huwxjq6pqaszdjf3d4ej9y","amount":0.01}, {"address":"bc1qs59a7e23zpjm0znteytrxvj839dlp205e50zch","amount":0.056} ... ]`
+                explode: true
+                in: query
+                name: destination
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: Tx Hash. *Only available in requests with confirmed status*
+                example: 2cdac43e92e65cb428e3ed992bcf6134751e09419c0ab9a90c8900e982ca96fc
+                explode: true
+                in: query
+                name: txid
+                required: true
+                schema:
+                  type: string
+                style: form
+              - description: "Status of this send request:\n  * `0` Request has been\
+                  \ queued for broadcasting. It usually takes few seconds under normal\
+                  \ conditions\n  * `1` Request has been fully broadcasted to Network\
+                  \ \n"
+                explode: true
+                in: query
+                name: status
+                required: true
+                schema:
+                  default: 1
+                  type: integer
+                style: form
+              responses:
+                "200":
+                  description: Your server returns this code if it accepts the callback.<br/><strong>Payrobot.io
+                    will try up to 3 times to send the notification to your server.</strong>
+              x-callback-request: true
+      description: "Sends funds from a wallet to one or multiple addresses.\n\n---\n\
+        ## Required Authorization Token\nThis transaction requires an authorization\
+        \ `token` which is the result of the `sha-256` hash of the following string:\n\
+        \n\n\n    walletId~destination~seed~walletPassphrase\n\n\n\n**For example**\n\
+        \nConsidering the following example values for the token:\n  - `walletId`\
+        \ 9df3f909-088d-4724-b34f-9a587c5ccc15\n  - `destination`\n    [{\"address\"\
+        :\"bc1q5defveu0acrf87m3huwxjq6pqaszdjf3d4ej9y\",\"amount\":0.01},{\"address\"\
+        :\"bc1qs59a7e23zpjm0znteytrxvj839dlp205e50zch\",\"amount\":0.056}]\n\n\n \
+        \ - `seed` 758748394\n  - `walletPassphrase` **Note: this was provided when\
+        \ you created the wallet** OHh6IIININmfmjGGsxlBBft2ch61VncaPscsp295h2ULx9xPY07Jom3d5cBifgoW\n\
+        \  \nThe resulting string, previous to hash is::\n\n\n\n    9df3f909-088d-4724-b34f-9a587c5ccc15~[{\"\
+        address\":\"bc1q5defveu0acrf87m3huwxjq6pqaszdjf3d4ej9y\",\"amount\":0.01},{\"\
+        address\":\"bc1qs59a7e23zpjm0znteytrxvj839dlp205e50zch\",\"amount\":0.056}]~758748394~OHh6IIININmfmjGGsxlBBft2ch61VncaPscsp295h2ULx9xPY07Jom3d5cBifgoW\n\
+        \n\n\nFinally after applying `sha-256` hash, we obtain the required `token`:\n\
+        \n\n\n    804ca9457b0fe3e4d243fe9e39e760ff1f287491ae8e79d015f92f7c6c96d7b1\n\
+        \n    \n---\n## Important\n\n  * Send requests are commonly queued, optionally\
+        \ you can specify a callback to get your web / app notified as soon as the\
+        \ request has been fully broadcasted to the Network.\n\n  * Transaction is\
+        \ limited to `25` destination addresses per request\n  \n  * Tx Hash is provided\
+        \ only through the callback\n  \n  * Confirmed send requests information is\
+        \ `DELETED`\nafter `3 days` of being confirmed\n  \n---\n## Minimum Send Amounts\n\
+        \n\n  * `Bitcoin`: 0.0001 BTC\n  * `Litecoin`: 0.001 LTC\n  * `Bitcoin Cash`:\
+        \ 0.001 BCH\n  \n---\n## Callback\nSend requests are commonly queued, optionally\
+        \ you can specify a callback to get your web / app notified as soon as the\
+        \ request has been fully broadcasted to the Network.\n\nThe callback sent\
+        \ to your callback url is a **POST** request with the following parameters:\n\
+        \  \n  \n*Example:*\n\n    currency:     \"BTC\"\n    walletId:     \"698fd3f6-5482-4798-8a46-6732af440616\"\
+        \n    requestId:    \"123fd3f6-9078-5790-4f40-6932bf440120\"\n    timestamp:\
+        \    1577179288\n    lastupdate:   1577179388\n    amount:       \"0.01\"\n\
+        \    callback:     \"https://callback-url.com\"\n    destination:  '[{\"address\"\
+        : \"bc1qf6ss0qtdn5q42...\"\n                  \"amount\": \"0.01\"}]'\n  \
+        \  txid:         \"2cdac43e92e65cb428e3ed992bcf61347...\"\n    status:   \
+        \    0\n"
+      operationId: createWalletSendRequest
+      parameters:
+      - description: |
+          Object Currency:
+            * `btc`: Bitcoin
+            * `ltc`: Litecoin
+            * `bch`: Bitcoin Cash
+        explode: false
+        in: path
+        name: currency
+        required: true
+        schema:
+          enum:
+          - btc
+          - ltc
+          - bch
+          example: btc
+          type: string
+        style: simple
+      - description: Wallet where funds to send are stored
+        explode: false
+        in: path
+        name: walletId
+        required: true
+        schema:
+          example: 9df3f909-088d-4724-b34f-9a587c5ccc15
+          type: string
+        style: simple
+      - description: |
+          JSON formatted array with all the destination addres(es) and the amount(s) to send\
+          `[{"address":"desired-destination-address","amount":X.XXXXXXXX}, ...]`
+        explode: true
+        in: query
+        name: destination
+        required: true
+        schema:
+          example: |
+            [{"address":"bc1q5defveu0acrf87m3huwxjq6pqaszdjf3d4ej9y","amount":0.01},{"address":"bc1qs59a7e23zpjm0znteytrxvj839dlp205e50zch","amount":0.056}]
+          type: string
+        style: form
+      - description: Unique random string generated by your web/app. **IT MUST BE
+          UNIQUE PER TRANSACTION PER WALLET**
+        explode: true
+        in: query
+        name: seed
+        required: true
+        schema:
+          example: "12345"
+          type: string
+        style: form
+      - description: |
+          SHA-256 hash of the concatenated string (substituting with the proper data):\
+          `walletId~destination~seed~walletPassphrase`
+        explode: true
+        in: query
+        name: token
+        required: true
+        schema:
+          example: c3c081de9510e8405839f36a875aa9fef43032caa3015305b27d6b7e0bcfc182
+          type: string
+        style: form
+      - description: Optional callback to notify your web / app as soon as the send
+          request has been fully broadcasted to the Network
+        explode: true
+        in: query
+        name: callback
+        required: false
+        schema:
+          example: https://your-app-url.com/example
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletSendRequest'
+          description: Successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: error
+      summary: Send funds from a wallet
+      tags:
+      - Wallet
+  /{currency}/wallets/{walletId}/send-requests/{requestId}:
+    get:
+      description: Obtains detailed information about a send request
+      operationId: getWalletSendRequest
+      parameters:
+      - description: |
+          Object Currency:
+            * `btc`: Bitcoin
+            * `ltc`: Litecoin
+            * `bch`: Bitcoin Cash
+        explode: false
+        in: path
+        name: currency
+        required: true
+        schema:
+          enum:
+          - btc
+          - ltc
+          - bch
+          example: btc
+          type: string
+        style: simple
+      - description: Wallet where funds to send are stored
+        explode: false
+        in: path
+        name: walletId
+        required: true
+        schema:
+          example: 9df3f909-088d-4724-b34f-9a587c5ccc15
+          type: string
+        style: simple
+      - description: Send Request ID
+        explode: false
+        in: path
+        name: requestId
+        required: true
+        schema:
+          example: 54f78565-56e2-4ece-b925-cab6ed67eb63
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletSendRequest'
+          description: Successful operation
+      summary: Obtain information of a send request
+      tags:
+      - Wallet
+  /{currency}/wallets/{walletId}/history:
+    get:
+      description: Gets last 100 transactions of the wallet
+      operationId: getWalletHistory
+      parameters:
+      - description: |
+          Object Currency:
+            * `btc`: Bitcoin
+            * `ltc`: Litecoin
+            * `bch`: Bitcoin Cash
+        explode: false
+        in: path
+        name: currency
+        required: true
+        schema:
+          enum:
+          - btc
+          - ltc
+          - bch
+          example: btc
+          type: string
+        style: simple
+      - description: ID of the desired Wallet
+        example: dd304d65-b606-4462-854b-51cdf061b00f
+        explode: false
+        in: path
+        name: walletId
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletHistory'
+          description: Successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          description: Error
+      summary: Get last transactions of wallet
+      tags:
+      - Wallet
+components:
+  schemas:
+    CryptoCurrency:
+      description: |
+        Object Currency:
+          * `BTC`: Bitcoin
+          * `LTC`: Litecoin
+          * `BCH`: Bitcoin Cash
+      enum:
+      - BTC
+      - LTC
+      - BCH
+      type: string
+    Wallet:
+      example:
+        walletId: 698fd3f6-5482-4798-8a46-6732af440616
+        balance: "1.00000000"
+        received: "1.50000000"
+        error: false
+        sent: "0.50000000"
+      properties:
+        currency:
+          $ref: '#/components/schemas/CryptoCurrency'
+        walletId:
+          description: ID of the queried Wallet
+          example: 698fd3f6-5482-4798-8a46-6732af440616
+          type: string
+        received:
+          description: Total received
+          example: "1.50000000"
+          type: string
+        sent:
+          description: Total sent
+          example: "0.50000000"
+          type: string
+        balance:
+          description: Current wallet balance
+          example: "1.00000000"
+          type: string
+        error:
+          description: |
+            `true` is there was a problem. `false` if not
+          example: false
+          type: boolean
+      type: object
+    WalletCreationInfo:
+      example:
+        walletPassphrase: yOWydnmbKh25tLAckUzvH9KWU7aEEnzsXKANhDTsy0nUfFKGK3Ewnr9rtoszAyEj
+        walletId: 698fd3f6-5482-4798-8a46-6732af440616
+        error: false
+      properties:
+        currency:
+          $ref: '#/components/schemas/CryptoCurrency'
+        walletId:
+          description: Unique ID of the new created Wallet
+          example: 698fd3f6-5482-4798-8a46-6732af440616
+          type: string
+        walletPassphrase:
+          description: Passphrase required to authorize send funds from your wallet
+          example: yOWydnmbKh25tLAckUzvH9KWU7aEEnzsXKANhDTsy0nUfFKGK3Ewnr9rtoszAyEj
+          type: string
+        error:
+          description: |
+            `true` is there was a problem. `false` if not
+          example: false
+          type: boolean
+      type: object
+    WalletSendRequest:
+      example:
+        walletId: 698fd3f6-5482-4798-8a46-6732af440616
+        amount: "0.01"
+        requestId: 123fd3f6-9078-5790-4f40-6932bf440120
+        destination:
+        - amount: "0.01"
+          address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+        - amount: "0.01"
+          address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+        - amount: "0.01"
+          address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+        - amount: "0.01"
+          address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+        - amount: "0.01"
+          address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+        callback: https://callback-url.com
+        txid: 2cdac43e92e65cb428e3ed992bcf6134751e09419c0ab9a90c8900e982ca96fc
+        lastupdate: 1577179388
+        error: false
+        timestamp: 1577179288
+        status: 0
+      properties:
+        currency:
+          $ref: '#/components/schemas/CryptoCurrency'
+        walletId:
+          description: Unique ID of the new created Wallet
+          example: 698fd3f6-5482-4798-8a46-6732af440616
+          type: string
+        requestId:
+          description: ID of this transaction, it can be used letter in the callback
+            or to query it
+          example: 123fd3f6-9078-5790-4f40-6932bf440120
+          type: string
+        timestamp:
+          description: Request creation date expressed in UNIX timestamp
+          example: 1577179288
+          type: integer
+        lastupdate:
+          description: Last update expressed in UNIX timestamp
+          example: 1577179388
+          type: integer
+        amount:
+          description: Total amount sent from wallet
+          example: "0.01"
+          type: string
+        callback:
+          description: Optional callback to notify your web / app as soon as the send
+            request has been fully broadcasted to the network
+          example: https://callback-url.com
+          type: string
+        destination:
+          description: |
+            Array with all the destination coin addres(es) and the amount(s) to send
+          items:
+            $ref: '#/components/schemas/AddressDetail'
+          maxItems: 25
+          minItems: 1
+          type: array
+        txid:
+          description: |
+            Tx Hash. *Only available in requests with confirmed status*
+          example: 2cdac43e92e65cb428e3ed992bcf6134751e09419c0ab9a90c8900e982ca96fc
+          type: string
+        status:
+          default: 0
+          description: "Status of this send request:\n  * `0: Queued` Request has\
+            \ been queued for broadcasting. It usually takes few seconds under normal\
+            \ conditions\n  * `1: Broadcasted` Request has been fully broadcasted\
+            \ to Bitcoin Network \n"
+          type: integer
+        error:
+          description: |
+            `true` is there was a problem. `false` if not
+          example: false
+          type: boolean
+      type: object
+    PaymentRequest:
+      example:
+        amount: "0.1"
+        address: 3KoUDMfrov91G4SXaCKGvTWDjGia9Jod5b
+        destination: 698fd3f6-5482-4798-8a46-6732af440616
+        type: 0
+        error: false
+        reference: "12345"
+        feeAmount: "0.0009"
+        pin: "1915925"
+        paymentId: 698fd3f6-5482-4798-8a46-6732af440616
+        finalAmount: "0.0991"
+        feePct: 6.027456183070403
+        callback: https://callback-url.com
+        lastupdate: 1577179388
+        timestamp: 1577179288
+        status: 1
+      properties:
+        currency:
+          $ref: '#/components/schemas/CryptoCurrency'
+        paymentId:
+          description: Unique identifier of the payment in selected currency
+          example: 698fd3f6-5482-4798-8a46-6732af440616
+          type: string
+        address:
+          description: One-use address for receive your client payment
+          example: 3KoUDMfrov91G4SXaCKGvTWDjGia9Jod5b
+          type: string
+        pin:
+          description: |-
+            PIN, it will be required if you need support with this payment.\
+            *Note: It's provided only the first time you create the payment request*
+          example: "1915925"
+          type: string
+        type:
+          description: |
+            * `0: Receive and forward` payment is forwarded to a desired coin address once it's confirmed
+
+            * `1: Receive and store` payment is stored in a payrobot.io wallet
+          type: integer
+        amount:
+          description: The payment amount your client has to send to the coin address
+          example: "0.1"
+          type: string
+        callback:
+          description: URL where payrobot.io will send the status of the payment (Webhook)
+          example: https://callback-url.com
+          type: string
+        feePct:
+          default: 0.9
+          description: Fee percentage that will be discounted
+          type: number
+        feeAmount:
+          description: Fee amount that will be discounted
+          example: "0.0009"
+          type: string
+        finalAmount:
+          description: "Final amount of the transaction (Fee discount is already applied)\n\
+            \  * For `Receive and forward` payment is the total amount to `forward`\
+            \ as soon as the payment is confirmed\n  \n  \n  * For `Receive and forward`\
+            \ payment is the total amount to `store` in the wallet as soon as the\
+            \ payment is confirmed"
+          example: "0.0991"
+          type: string
+        destination:
+          description: |
+            * For `Receive and forward` payment is the coin `ADDRESS` where the payment is going to be forwarded as soon as it's confirmed
+
+            * For `Receive and store` payment is the `WALLET ID` where the payment is going to be stored as soon as it's confirmed
+          example: 698fd3f6-5482-4798-8a46-6732af440616
+          type: string
+        reference:
+          description: Custom reference for payment identifying
+          example: "12345"
+          type: string
+        timestamp:
+          description: Request creation date expressed in UNIX timestamp
+          example: 1577179288
+          type: integer
+        lastupdate:
+          description: Last update expressed in UNIX timestamp
+          example: 1577179388
+          type: integer
+        status:
+          description: |
+            Status of the payment:
+               * `0: Idle` payment has not been paid
+               * `1: Incomplete` payment is being paid partially
+               * `2: Confirming` payment has been received completely but it's not confirmed by network yet
+               * `3: Confirmed` payment has been paid completely and it has at least `1` confirmation by network
+          type: integer
+        error:
+          description: |
+            `true` is there was a problem. `false` if not
+          example: false
+          type: boolean
+      type: object
+    WalletHistory:
+      example:
+        walletId: 698fd3f6-5482-4798-8a46-6732af440616
+        transactions:
+        - amount: "0.01"
+          addresses:
+          - amount: "0.01"
+            address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+          - amount: "0.01"
+            address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+          timestamp: 1587134093
+        - amount: "0.01"
+          addresses:
+          - amount: "0.01"
+            address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+          - amount: "0.01"
+            address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+          timestamp: 1587134093
+        error: false
+      properties:
+        currency:
+          $ref: '#/components/schemas/CryptoCurrency'
+        walletId:
+          description: ID of the queried wallet
+          example: 698fd3f6-5482-4798-8a46-6732af440616
+          type: string
+        transactions:
+          description: List of transactions
+          items:
+            $ref: '#/components/schemas/WalletTransaction'
+          type: array
+        error:
+          description: |
+            `true` is there was a problem. `false` if not
+          example: false
+          type: boolean
+      type: object
+    WalletTransaction:
+      example:
+        amount: "0.01"
+        addresses:
+        - amount: "0.01"
+          address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+        - amount: "0.01"
+          address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+        timestamp: 1587134093
+      properties:
+        amount:
+          description: |
+            Amount of the transaction:
+              * `Negative number (< 0)` is a withdrawal
+              * `Positive number (> 0)` is a deposit
+          example: "0.01"
+          type: string
+        addresses:
+          description: |
+            Address(es) involved:
+              * `payments` address(es) where payment was received
+              * `withdrawals` address(es) where funds were sent
+          items:
+            $ref: '#/components/schemas/AddressDetail'
+          type: array
+        timestamp:
+          description: Timestamp of the transaction expressed in `Unix Timestamp`
+          example: 1587134093
+          type: integer
+      type: object
+    AddressDetail:
+      example:
+        amount: "0.01"
+        address: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+      properties:
+        address:
+          description: Address
+          example: bc1qf6ss0qtdn5q42n2ysh95jfhp7rwrz2wzqswdax
+          type: string
+        amount:
+          description: Amount
+          example: "0.01"
+          type: string
+      type: object
+    ErrorResponse:
+      properties:
+        error:
+          description: |
+            `true` is there was a problem. `false` if not
+          example: true
+          type: boolean
+        errorMsg:
+          description: Description of the error
+          example: Description of the error
+          type: string
+      type: object
